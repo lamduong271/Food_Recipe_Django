@@ -5,6 +5,20 @@ from rest_framework.permissions import IsAuthenticated
 from core.models import Tag, Ingredient
 from recipe import serializers
 
+class BaseRecipeAttrViewSet(viewsets.GenericViewSet, 
+                    mixins.ListModelMixin,
+                    mixins.CreateModelMixin):
+    """Base viewset for owned recipe attribute"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    def get_queryset(self):
+        """return objects for current authenticated user only"""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+    def perform_create(self, serializer):
+        """Create a new object"""
+        serializer.save(user=self.request.user)
+    
+
 class TagViewSet(viewsets.GenericViewSet, 
                     mixins.ListModelMixin,
                     mixins.CreateModelMixin):
@@ -23,7 +37,8 @@ class TagViewSet(viewsets.GenericViewSet,
 # Create your views here.
 
 class IngredientViewSet(viewsets.GenericViewSet, 
-                        mixins.ListModelMixin):
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     queryset = Ingredient.objects.all()
@@ -31,3 +46,6 @@ class IngredientViewSet(viewsets.GenericViewSet,
     def get_queryset(self):
         """return objects for current authenticated user only"""
         return self.queryset.filter(user=self.request.user).order_by('-name')
+    def perform_create(self, serializer):
+        """Create a new ingredient"""
+        serializer.save(user=self.request.user)
